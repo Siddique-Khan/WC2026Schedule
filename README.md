@@ -73,3 +73,5 @@ wc2026-app/
 │   ├── App.tsx                # state, tabs, share/reset/timezone
 │   └── index.css              # "Stadium Night" football theme
 ```
+
+By Khan Siddique
