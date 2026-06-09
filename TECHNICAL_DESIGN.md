@@ -4,8 +4,8 @@ An interactive FIFA World Cup 2026 schedule & prediction web app, live at
 **https://funprojects.ai/wc2026**.
 
 Users enter group scores and knockout results; the app computes group standings
-with the real FIFA tiebreakers, resolves qualification (including the "best 8
-third-placed teams" rule), advances winners through a full knockout bracket
+With the real FIFA tiebreakers, it resolves qualification (including the "best 8" 
+third-placed teams" rule) advances winners through a full knockout bracket
 (90 min → extra time → penalties), and traces any team's path to the final.
 Everything runs in the browser; predictions are saved locally and can be shared.
 
