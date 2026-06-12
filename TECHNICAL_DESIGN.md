@@ -4,8 +4,8 @@ An interactive FIFA World Cup 2026 schedule & prediction web app, live at
 **https://funprojects.ai/wc2026**.
 
 Users enter group scores and knockout results; the app computes group standings
-With the real FIFA tiebreakers, it resolves qualification (including the "best 8" 
-third-placed teams" rule) advances winners through a full knockout bracket
+with the real FIFA tiebreakers, resolves qualification (including the "best 8
+third-placed teams" rule), advances winners through a full knockout bracket
 (90 min → extra time → penalties), and traces any team's path to the final.
 Everything runs in the browser; predictions are saved locally and can be shared.
 
@@ -153,9 +153,12 @@ after ET. The winner is computed, not clicked, and propagates to the next round.
 
 | Component | Role |
 |---|---|
-| `App.tsx` | Holds state, hydrates from URL→localStorage, tab nav (Group Stage · Knockout Bracket · My Team's Path), header (logos, timezone, Save/Load, Share, Reset). |
+| `App.tsx` | Holds state, hydrates from URL→localStorage, tab nav (Group Stage · Knockout Bracket · My Team's Path · By Date · By Venue; last tab remembered per device), header (logos, timezone, Save/Load, Share, Reset). |
 | `GroupStage.tsx` + `StandingsTable.tsx` | 12 group cards: editable scorelines + live standings with qualification highlighting + venues. |
-| `KnockoutBracket.tsx` | R32→Final columns; each tie is a team×phase (90′/ET/Pens) score grid; winner auto-highlighted; venues shown. |
+| `KnockoutBracket.tsx` | R32→Final columns of `Tie` widgets. |
+| `ScheduleViews.tsx` | By Date / By Venue tabs: all 104 matches in collapsible sections — day sections bucketed in the *selected* timezone (with a Today badge + auto-scroll during the tournament), venue sections alphabetical by city. Fully editable: group rows and knockout ties write to the same shared state. |
+| `GroupFixture.tsx` | One editable group fixture row (shared by `GroupStage` and `ScheduleViews`; optional group badge, time-only kickoff, hideable venue). |
+| `Tie.tsx` | One knockout tie: team×phase (90′/ET/Pens) score grid, winner auto-highlighted (shared by `KnockoutBracket`, `PathFinder` and `ScheduleViews`; optional round tag). |
 | `PathFinder.tsx` | Pick a team → see its qualification status and route to the final, highlighted on the bracket. |
 | `SessionManager.tsx` | Save/name/load/rename/delete named sessions; export/import a session file; copy a resume link. |
 | `Flag.tsx` | Flag image with graceful fallback. |
@@ -172,7 +175,11 @@ after ET. The winner is computed, not clicked, and propagates to the next round.
 - **Share / resume link:** the state is compactly encoded into the URL hash
   (`#share=…`), so a link reproduces an entire bracket on any device.
 - **Timezone:** kickoff times are stored in UTC and rendered in the visitor's
-  local timezone, with a manual override dropdown.
+  local timezone, with a manual override dropdown. The By Date view buckets
+  matches by calendar day in the selected timezone.
+- **Last tab:** the active tab is remembered per device (`wc2026-tab-v1`) —
+  a UI preference deliberately kept out of prediction state, sessions, and
+  share URLs, so switching views can never alter a saved bracket.
 
 ---
 
