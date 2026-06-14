@@ -2,7 +2,13 @@
 
 An interactive FIFA World Cup 2026 predictor served at **funprojects.ai/wc2026**.
 
-Enter scorelines for all 72 group matches and watch:
+**Real results auto-fill on load** (hybrid mode): played group matches are
+fetched from football-data.org (via the `/api/results` Cloud Function) and locked
+as the *actual* score, so you only predict matches that haven't kicked off yet.
+Your saved/shared predictions still hold only your own picks, and if the fetch
+fails the app works as a pure predictor.
+
+Enter scorelines for the remaining group matches and watch:
 - **Group standings** re-sort live using the real FIFA tiebreaker chain
   (points → head-to-head mini-league → goal difference → goals scored → FIFA rank).
 - **Qualification** resolve automatically: the 12 group winners, 12 runners-up,
@@ -41,6 +47,13 @@ npx tsx scripts/verify.ts   # headless logic checks (tiebreakers, qualification,
 ```
 
 Note: in dev the app runs under `/wc2026/` (the production base path).
+
+Live results need the `/api/results` Cloud Function (it holds the
+`FOOTBALL_DATA_API_KEY` secret — see `../MAINTENANCE_NOTES.md` §5.6). That
+rewrite only exists in production, so in dev either run the functions emulator or
+point the app at the deployed function:
+`VITE_RESULTS_URL=https://funprojects.ai/api/results npm run dev`. Without it the
+app just runs as a pure predictor.
 
 ## Build & deploy
 

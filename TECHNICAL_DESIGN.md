@@ -226,6 +226,51 @@ country/site/day.
 
 ---
 
+## 9b. Live results (auto-filled real scores)
+
+So visitors don't have to transcribe scores that already happened, the app
+fetches **real match results** on load and folds them into the predictor in
+**hybrid** mode: played matches show the *actual* score (locked, read-only);
+unplayed matches stay editable predictions.
+
+```
+Browser (on load) ──fetch /api/results──► results Cloud Function ──► football-data.org
+        │                                  (holds API key, CORS, Cache-Control)
+        ▼
+  liveResults.ts  → normalize team names, map fixture → match no
+        ▼
+  App: mergedState.scores = { ...userPredictions, ...realResults }   (real wins)
+        │                                   ▲ persistence still saves only userPredictions
+        ▼
+  standings / qualification / bracket  (unchanged — derive from mergedState)
+```
+
+- **Server (`functions/index.js` → `results`)** is a thin proxy: the API key is a
+  Firebase secret (`FOOTBALL_DATA_API_KEY`) — never in the client bundle — and
+  football-data.org blocks browser CORS, so the call must be server-side (same
+  rationale as the `askMaester` Gemini proxy). It trims the payload and sets
+  `Cache-Control: max-age=300` so the CDN serves repeat loads without re-invoking
+  the function (stays under the free-tier 10-req/min limit).
+- **Client (`src/lib/liveResults.ts`)** maps each provider fixture to our match
+  number via `GROUP_MATCHES` (matching group + team names, either orientation),
+  using `TEAM_NAME_ALIASES` to reconcile naming (e.g. "South Korea" → "Korea
+  Republic"). Returns `{ groupScores, lockedGroupNos, updatedAt }`.
+- **Merge (`App.tsx`)**: `mergedState` overlays real results on the user's
+  predictions and feeds the existing pure logic; `lockedGroupNos` flags which
+  fixtures render read-only (with an "actual result" tag). **Persistence, share
+  URLs, and saved sessions still store only the user's own predictions** — the
+  live layer is additive and recomputed each load.
+- **Resilience**: any fetch failure (offline, provider down, WC not on the free
+  tier → 502) leaves the live layer empty, so the app degrades to the original
+  pure predictor with no error surfaced.
+- **Scope**: group stage only today; knockout auto-fill is a planned Phase 2
+  (needs the 90'/ET/penalties breakdown verified against the provider).
+- **Dev**: `/api/results` only resolves via the hosting rewrite (prod). For
+  `npm run dev`, set `VITE_RESULTS_URL` to the deployed function (CORS is on) or
+  run the functions emulator.
+
+---
+
 ## 10. Build, run & deploy
 
 ### Local development
