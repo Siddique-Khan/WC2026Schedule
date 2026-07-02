@@ -252,19 +252,32 @@ Browser (on load) ──fetch /api/results──► results Cloud Function ─�
   `Cache-Control: max-age=300` so the CDN serves repeat loads without re-invoking
   the function (stays under the free-tier 10-req/min limit).
 - **Client (`src/lib/liveResults.ts`)** maps each provider fixture to our match
-  number via `GROUP_MATCHES` (matching group + team names, either orientation),
-  using `TEAM_NAME_ALIASES` to reconcile naming (e.g. "South Korea" → "Korea
-  Republic"). Returns `{ groupScores, lockedGroupNos, updatedAt }`.
-- **Merge (`App.tsx`)**: `mergedState` overlays real results on the user's
-  predictions and feeds the existing pure logic; `lockedGroupNos` flags which
-  fixtures render read-only (with an "actual result" tag). **Persistence, share
-  URLs, and saved sessions still store only the user's own predictions** — the
-  live layer is additive and recomputed each load.
+  number. **Group** fixtures match via `GROUP_MATCHES` on group + team names
+  (either orientation). **Knockout** ties have no group and dynamic teams, so
+  they're keyed by `(round + the two teams)` — `decodeKnockoutScore` turns the
+  provider's score into our phased model (`fullTime` is pre-penalties: REGULAR =
+  90′; EXTRA_TIME = after-ET; PENALTY_SHOOTOUT = `fullTime − penalties` level,
+  then the shootout). `TEAM_NAME_ALIASES` reconciles naming (e.g. "South Korea"
+  → "Korea Republic"). Returns `{ groupScores, lockedGroupNos, knockout, updatedAt }`.
+- **Merge**: group results overlay the user's predictions in `App.tsx`'s
+  `mergedState`; knockout results are applied inside `resolveBracket(state, live)`
+  — as it resolves each tie's two teams it looks them up by `(round + team set)`,
+  orients the score to our home/away sides, and locks the tie, so the derived
+  winner **cascades into the next round's feeders**. (Verified: our qualification
+  from the real group results reproduces the actual Round-of-32 pairings, which
+  anchor the cascade.) `lockedGroupNos` / `lockedKnockoutNos` flag which fixtures
+  render read-only (with an "actual result" tag). **Persistence, share URLs, and
+  saved sessions still store only the user's own predictions** — the live layer
+  is additive and recomputed each load.
 - **Resilience**: any fetch failure (offline, provider down, WC not on the free
   tier → 502) leaves the live layer empty, so the app degrades to the original
-  pure predictor with no error surfaced.
-- **Scope**: group stage only today; knockout auto-fill is a planned Phase 2
-  (needs the 90'/ET/penalties breakdown verified against the provider).
+  pure predictor with no error surfaced. A knockout tie whose real pairing our
+  bracket doesn't reproduce is simply skipped (never mis-assigned), staying an
+  editable prediction.
+- **Knockout ET/90′ split**: the provider gives no 90-minute split for ties that
+  reach extra time, so those are recorded as 0-0 at 90′ with all goals in ET.
+  The **winner, final score, and shootout are exact**; only that split is a
+  display convention.
 - **Dev**: `/api/results` only resolves via the hosting rewrite (prod). For
   `npm run dev`, set `VITE_RESULTS_URL` to the deployed function (CORS is on) or
   run the functions emulator.

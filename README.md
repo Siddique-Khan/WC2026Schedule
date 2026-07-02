@@ -2,11 +2,12 @@
 
 An interactive FIFA World Cup 2026 predictor served at **funprojects.ai/wc2026**.
 
-**Real results auto-fill on load** (hybrid mode): played group matches are
-fetched from football-data.org (via the `/api/results` Cloud Function) and locked
-as the *actual* score, so you only predict matches that haven't kicked off yet.
-Your saved/shared predictions still hold only your own picks, and if the fetch
-fails the app works as a pure predictor.
+**Real results auto-fill on load** (hybrid mode): played matches — group *and*
+knockout — are fetched from football-data.org (via the `/api/results` Cloud
+Function) and locked as the *actual* score, so you only predict matches that
+haven't kicked off yet. Knockout results advance the bracket automatically. Your
+saved/shared predictions still hold only your own picks, and if the fetch fails
+the app works as a pure predictor.
 
 Enter scorelines for the remaining group matches and watch:
 - **Group standings** re-sort live using the real FIFA tiebreaker chain
